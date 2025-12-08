@@ -17,6 +17,7 @@ from langchain_core.documents import Document
 from pydantic import BaseModel, Field
 from tqdm import tqdm
 
+from mmore.profiling import Profiler, enable_profiling_from_env
 from mmore.rag.retriever import Retriever, RetrieverConfig
 from mmore.utils import load_config
 
@@ -60,9 +61,15 @@ def retrieve(
 
     If candidate document IDs are provided, the search is restricted to those documents attaching a filter expression to both dense and sparse search requests. Otherwise, a full collection search is performed
     """
-
+    # Enable profiling from environment
+    enable_profiling_from_env()
+    
     # Load the config file
     config = load_config(config_file, RetrieverConfig)
+    
+    # Start profiling
+    profiler = Profiler()
+    profiler.start()
 
     logger.info("Running retriever...")
     retriever = Retriever.from_config(config)
@@ -98,6 +105,9 @@ def retrieve(
     # Save results to output file
     save_results(retrieved_docs_for_all_queries, queries, Path(output_file))
     logger.info(f"Done! Results saved to {output_file}")
+    
+    # Stop profiling
+    profiler.stop(name="retrieve")
 
 
 class Msg(BaseModel):

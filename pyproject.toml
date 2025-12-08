@@ -132,6 +132,7 @@ rag = [
 ]
 
 dev = ["pytest>=8.0.0", "ruff>=0.4.0"]
+profiling = ["memory-profiler>=0.61.0"]
 
 [tool.uv]
 conflicts = [

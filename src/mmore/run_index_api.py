@@ -20,6 +20,7 @@ logging.basicConfig(
 )
 
 from .process.processors import register_all_processors
+from .profiling import enable_profiling_from_env
 from .rag.retriever import RetrieverConfig
 from .utils import get_indexer, load_config, process_files_default
 
@@ -398,6 +399,10 @@ def make_router(config_path: str) -> APIRouter:
 
 
 def run_api(config_file: str, host: str, port: int):
+    # Enable profiling from environment
+    enable_profiling_from_env()
+    # Note: For API servers, profiling is typically not stopped as they run indefinitely
+    
     router = make_router(config_file)
 
     app = FastAPI(title="Indexer API")

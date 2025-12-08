@@ -12,6 +12,7 @@ from mmore.dashboard.backend.client import DashboardClient
 from mmore.process.crawler import Crawler, CrawlerConfig
 from mmore.process.dispatcher import Dispatcher, DispatcherConfig
 from mmore.process.drive_download import GoogleDriveDownloader
+from mmore.profiling import Profiler, enable_profiling_from_env
 from mmore.type import MultimodalSample
 from mmore.utils import load_config
 
@@ -42,9 +43,16 @@ class ProcessInference:
 
 def process(config_file: str):
     """Process documents from a directory."""
+    # Enable profiling from environment
+    enable_profiling_from_env()
+    
     click.echo(f"Dispatcher configuration file path: {config_file}")
 
     overall_start_time = time.time()
+    
+    # Start profiling
+    profiler = Profiler()
+    profiler.start()
 
     config: ProcessInference = load_config(config_file, ProcessInference)
 
@@ -137,6 +145,9 @@ def process(config_file: str):
     overall_end_time = time.time()
     overall_time = overall_end_time - overall_start_time
     logger.info(f"Total execution time: {overall_time:.2f} seconds")
+    
+    # Stop profiling
+    profiler.stop(name="process")
 
 
 if __name__ == "__main__":

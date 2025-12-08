@@ -6,6 +6,7 @@ from typing import Optional, Union
 from dotenv import load_dotenv
 
 from mmore.index.indexer import Indexer, IndexerConfig
+from mmore.profiling import Profiler, enable_profiling_from_env
 from mmore.type import MultimodalSample
 from mmore.utils import load_config
 
@@ -33,8 +34,15 @@ def index(
     collection_name: Optional[str] = None,
 ):
     """Index files for specified documents."""
+    # Enable profiling from environment
+    enable_profiling_from_env()
+    
     # Load the config file
     config: IndexConfig = load_config(config_file, IndexConfig)
+    
+    # Start profiling
+    profiler = Profiler()
+    profiler.start()
     if collection_name is None:
         collection_name = config.collection_name
     if documents_path is None:
@@ -47,6 +55,9 @@ def index(
         config=config.indexer, documents=documents, collection_name=collection_name
     )
     logger.info("Documents indexed!")
+    
+    # Stop profiling
+    profiler.stop(name="index")
 
 
 if __name__ == "__main__":

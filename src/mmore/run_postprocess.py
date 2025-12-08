@@ -3,6 +3,7 @@ import logging
 from typing import List
 
 from mmore.process.post_processor.pipeline import PPPipeline, PPPipelineConfig
+from mmore.profiling import Profiler, enable_profiling_from_env
 from mmore.type import MultimodalSample
 from mmore.utils import load_config
 
@@ -21,11 +22,18 @@ def _load_dataset(data_path: List[str]) -> List[MultimodalSample]:
 
 def postprocess(config_file, input_data):
     """Run post-processors pipeline."""
+    # Enable profiling from environment
+    enable_profiling_from_env()
+    
     if isinstance(input_data, str):
         input_data = [input_data]
 
     # Load config
     config = load_config(config_file, PPPipelineConfig)
+    
+    # Start profiling
+    profiler = Profiler()
+    profiler.start()
 
     # Load post-processors pipeline
     pipeline = PPPipeline.from_config(config)
@@ -37,6 +45,9 @@ def postprocess(config_file, input_data):
 
     # Run pipeline
     samples = pipeline(samples)
+    
+    # Stop profiling
+    profiler.stop(name="postprocess")
 
 
 if __name__ == "__main__":

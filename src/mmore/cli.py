@@ -1,12 +1,34 @@
+import os
 from typing import Optional
 
 import click
 
+from .profiling import configure_profiling, enable_profiling_from_env
+
 
 @click.group()
-def main():
+@click.option(
+    "--enable-profiling",
+    is_flag=True,
+    default=False,
+    help="Enable profiling for this command execution.",
+)
+@click.option(
+    "--profiling-output-dir",
+    type=str,
+    default="./profiling_output",
+    help="Directory to save profiling results.",
+)
+def main(enable_profiling: bool, profiling_output_dir: str):
     """CLI for mmore commands."""
-    pass
+    # Enable profiling from environment or CLI flag
+    if enable_profiling or os.getenv("MMORE_PROFILING_ENABLED", "false").lower() == "true":
+        configure_profiling(
+            enabled=True,
+            output_dir=profiling_output_dir,
+        )
+    else:
+        enable_profiling_from_env()
 
 
 @main.command()

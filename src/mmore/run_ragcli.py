@@ -13,6 +13,7 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+from .profiling import enable_profiling_from_env
 from .rag.pipeline import RAGPipeline
 from .run_rag import RAGInferenceConfig
 from .utils import load_config
@@ -20,6 +21,9 @@ from .utils import load_config
 
 class RagCLI:
     def __init__(self, config_file: str):
+        # Enable profiling from environment
+        enable_profiling_from_env()
+        
         self.ragConfig: Optional[RAGInferenceConfig] = None
         self.ragPP = None
         self.modified: bool = (

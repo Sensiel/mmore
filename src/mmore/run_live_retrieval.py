@@ -3,11 +3,16 @@ import argparse
 import uvicorn
 from fastapi import FastAPI
 
+from .profiling import enable_profiling_from_env
 from .run_index_api import make_router as index_router
 from .run_retriever import make_router as retriever_router
 
 
 def run(config_file: str, host: str, port: int):
+    # Enable profiling from environment
+    enable_profiling_from_env()
+    # Note: For API servers, profiling is typically not stopped as they run indefinitely
+    
     app = FastAPI(title="Live Indexing & Retrieval API")
 
     app.include_router(index_router(config_file))

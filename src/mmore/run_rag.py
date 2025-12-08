@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from mmore.profiling import Profiler, enable_profiling_from_env
 from mmore.rag.pipeline import RAGConfig, RAGPipeline
 from mmore.utils import load_config
 
@@ -100,7 +101,14 @@ def create_api(rag: RAGPipeline, endpoint: str):
 
 def rag(config_file):
     """Run RAG in local or API"""
+    # Enable profiling from environment
+    enable_profiling_from_env()
+    
     config = load_config(config_file, RAGInferenceConfig)
+    
+    # Start profiling
+    profiler = Profiler()
+    profiler.start()
 
     logger.info("Creating the RAG Pipeline...")
     rag_pp = RAGPipeline.from_config(config.rag)
@@ -117,10 +125,14 @@ def rag(config_file):
         config_args = cast(APIConfig, config.mode_args)
 
         app = create_api(rag_pp, config_args.endpoint)
+        # Note: Profiling will continue for API mode
         uvicorn.run(app, host=config_args.host, port=config_args.port)
-
     else:
         raise ValueError(f"Unknown mode: {config.mode}. Should be either api or local")
+    
+    # Stop profiling (only for local mode)
+    if config.mode == "local":
+        profiler.stop(name="rag")
 
 
 if __name__ == "__main__":

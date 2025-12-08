@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
+from .profiling import Profiler, enable_profiling_from_env
 from .rag.pipeline import RAGPipeline
 from .run_rag import APIConfig, LocalConfig, RAGInferenceConfig
 from .utils import load_config
@@ -38,8 +39,15 @@ class WebsearchInferenceConfig:
 
 
 def run_websearch(config_file):
+    # Enable profiling from environment
+    enable_profiling_from_env()
+    
     cfg = load_config(config_file, WebsearchInferenceConfig)
     ws = cfg.websearch
+    
+    # Start profiling
+    profiler = Profiler()
+    profiler.start()
     if ws.mode == "local":
         pipeline = WebsearchPipeline(config=ws)
         logger.info("Running Websearch pipeline in LOCAL mode...")
@@ -50,10 +58,14 @@ def run_websearch(config_file):
     elif ws.mode == "api":
         logger.info("Starting Websearch pipeline in API mode...")
         app = create_api(cfg)
+        # Note: Profiling will continue for API mode
         uvicorn.run(app, host="0.0.0.0", port=8000)
-
     else:
         raise ValueError(f"Unknown mode: {ws.mode!r}. Must be 'local' or 'api'.")
+    
+    # Stop profiling (only for local mode)
+    if ws.mode == "local":
+        profiler.stop(name="websearch")
 
 
 class QueryInput(BaseModel):
